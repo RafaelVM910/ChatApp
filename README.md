@@ -3,7 +3,7 @@ Group chat desktop application created for Networks &amp; Communication class
 
 ## How to install
 1. Download the appropriate PyAudio file depending ou your pyhton version
-  a. https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+  \na. https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
 2. pip install "pyaudio file downloaded".whl
 3. pip install socket, threading, tkinter, vidstream
 4. Download the repository
