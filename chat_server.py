@@ -14,13 +14,13 @@ window.configure(bg="#222831")
 connect_butt = tk.PhotoImage(file = "images/connect_butt.png")
 stop_butt = tk.PhotoImage(file = "images/stop_butt.png")
 
-# Frames
+# labels - host and port
 host_label = tk.Label(window, text="Host:\nX.X.X.X", fg="#EEE", bg="#222831", padx="45px", pady="5px")
 port_label = tk.Label(window, text="Port:\nXXXX", fg="#EEE", bg="#222831", padx="50px", pady="5px")
-
+# buttons - connect and stop
 connect_button = tk.Button(window, image=connect_butt, bd=0, bg="#222831", command=lambda : start_server())
 stop_button = tk.Button(window, image=stop_butt, bd=0, bg="#222831", command=lambda : stop_server(), state=tk.DISABLED)
-
+# users box
 users_label = tk.Label(window, text="Users Connected:", fg="#EEE", bg="#222831")
 users_box = tk.Text(window, height=10, width=25, bg="#393E46", fg="#EEE")
 
@@ -44,7 +44,7 @@ clients_names = []
 vidstream_server = StreamingServer(HOST_ADDR, 9999)
 vidstream_audio = AudioReceiver(HOST_ADDR, 8888)
 
-# Start server function
+# function to start server
 def start_server():
     connect_button.config(state=tk.DISABLED)
     stop_button.config(state=tk.NORMAL)
@@ -54,50 +54,46 @@ def start_server():
     print(socket.SOCK_STREAM)
 
     server.bind((HOST_ADDR, HOST_PORT))
-    server.listen(5)  # server is listening for client connection
+    server.listen(5)
 
     threading._start_new_thread(accept_clients, (server, " "))
 
     host_label["text"] = "Host:\n" + HOST_ADDR
     port_label["text"] = "Port:\n" + str(HOST_PORT)
-
+    
+    # start vidstream server
     vidstream_server.start_server()
     vidstream_audio.start_server()
 
-
-# Stop server function
+# Stop server 
 def stop_server():
     global server
     connect_button.config(state=tk.NORMAL)
     stop_button.config(state=tk.DISABLED)
+    # stop vidstream
     vidstream_server.stop_server()
     vidstream_audio.stop_server()
 
-
+# function that handles clients
 def accept_clients(the_server, y):
     while True:
         client, addr = the_server.accept()
         clients.append(client)
 
-        # use a thread so as not to clog the gui thread
         threading._start_new_thread(send_receive_client_message, (client, addr))
 
-
-# Function to receive message from current client AND
-# Send that message to other clients
+# receive message from current client and send that message to other clients
 def send_receive_client_message(client_connection, client_ip_addr):
     global server, client_name, clients, clients_addr
     client_msg = " "
 
-    # send welcome message to client
+    # Welcome user
     client_name  = client_connection.recv(4096).decode()
-    welcome_msg = "Welcome " + client_name + ". Use 'exit' to quit"
+    welcome_msg = "Welcome " + client_name + ". Type 'exit' to quit"
     client_connection.send(welcome_msg.encode())
 
     clients_names.append(client_name)
-
-    update_client_names_display(clients_names)  # update client names display
-
+    update_client_names_display(clients_names) 
 
     while True:
         data = client_connection.recv(4096).decode()
@@ -114,7 +110,7 @@ def send_receive_client_message(client_connection, client_ip_addr):
                 server_msg = str(sending_client_name + "->" + client_msg)
                 c.send(server_msg.encode())
 
-    # find the client index then remove from both lists(client name list and connection list)
+    # find the client index then remove from both lists
     idx = get_client_index(clients, client_connection)
     del clients_names[idx]
     del clients[idx]
@@ -122,9 +118,9 @@ def send_receive_client_message(client_connection, client_ip_addr):
     client_connection.send(server_msg.encode())
     client_connection.close()
 
-    update_client_names_display(clients_names)  # update client names display
+    update_client_names_display(clients_names)
 
-
+# helper functions
 # Return the index of the current client in the list of clients
 def get_client_index(client_list, curr_client):
     idx = 0
@@ -135,9 +131,7 @@ def get_client_index(client_list, curr_client):
 
     return idx
 
-
-# Update client name display when a new client connects OR
-# When a connected client disconnects
+# Update client name display
 def update_client_names_display(name_list):
     users_box.config(state=tk.NORMAL)
     users_box.delete('1.0', tk.END)
@@ -146,5 +140,5 @@ def update_client_names_display(name_list):
         users_box.insert(tk.END, c+"\n")
     users_box.config(state=tk.DISABLED)
 
-
+# Main loop
 window.mainloop()
